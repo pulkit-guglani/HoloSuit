@@ -1,0 +1,111 @@
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
+
+[RequireComponent(typeof(ARRaycastManager))]
+public class PlaceObjectsOnPlane : MonoBehaviour
+{
+    [SerializeField]
+    [Tooltip("Instantiates this prefab on a plane at the touch location.")]
+    GameObject m_PlacedPrefab;
+
+    /// <summary>
+    /// The prefab to instantiate on touch.
+    /// </summary>
+    public GameObject placedPrefab
+    {
+        get { return m_PlacedPrefab; }
+        set { m_PlacedPrefab = value; }
+    }
+
+    /// <summary>
+    /// The object instantiated as a result of a successful raycast intersection with a plane.
+    /// </summary>
+    public GameObject spawnedObject { get; private set; }
+
+    /// <summary>
+    /// Invoked whenever an object is placed in on a plane.
+    /// </summary>
+    public static event Action onPlacedObject;
+
+    ARRaycastManager m_RaycastManager;
+
+    static List<ARRaycastHit> s_Hits = new List<ARRaycastHit>();
+    
+    [SerializeField]
+    int m_MaxNumberOfObjectsToPlace = 1;
+
+    int m_NumberOfPlacedObjects = 0;
+
+    [SerializeField]
+    bool m_CanReposition = true;
+
+    public bool canReposition
+    {
+        get => m_CanReposition;
+        set => m_CanReposition = value;
+    }
+
+    void Awake()
+    {
+        m_RaycastManager = GetComponent<ARRaycastManager>();
+    }
+
+    void Update()
+    {
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            if (touch.phase == TouchPhase.Began)
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
+                RaycastHit hit;
+
+                if (Physics.Raycast(ray, out hit))
+                {
+                    Debug.Log(hit.transform.name);
+                    if ((hit.collider != null && hit.collider.gameObject.CompareTag("friendly")) || EventSystem.current.IsPointerOverGameObject(0))
+                    {
+
+                        GameObject touchedObject = hit.transform.gameObject;
+
+                        Debug.Log("Touched " + touchedObject.transform.name);
+                    }
+                    else
+                    {
+                        if (m_RaycastManager.Raycast(touch.position, s_Hits, TrackableType.PlaneWithinPolygon))
+                        {
+                            Pose hitPose = s_Hits[0].pose;
+
+                            if (m_NumberOfPlacedObjects < m_MaxNumberOfObjectsToPlace)
+                            {
+                                spawnedObject = Instantiate(m_PlacedPrefab, hitPose.position, hitPose.rotation);
+
+                                m_NumberOfPlacedObjects++;
+                            }
+                            else
+                            {
+                                if (m_CanReposition)
+                                {
+                                    spawnedObject.transform.SetPositionAndRotation(hitPose.position, hitPose.rotation);
+                                }
+                            }
+
+                            if (onPlacedObject != null)
+                            {
+                                onPlacedObject();
+                            }
+                        }
+                    }
+                }
+
+
+              
+            }
+        }
+    }
+}
