@@ -7,10 +7,6 @@ public class Rotator : MonoBehaviour
     bool isRotating;
     [SerializeField] Renderer Base_renderer;
     // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
     // Update is called once per frame
    public void RotateLeft()
@@ -19,7 +15,7 @@ public class Rotator : MonoBehaviour
             return;
 
         isRotating = true;
-        transform.LeanRotateY(-45+ transform.rotation.eulerAngles.y, 1);
+        transform.LeanRotateY(-45+ transform.rotation.eulerAngles.y, 1).setEaseInOutCubic();
         StartCoroutine(AfterRotation());
 
     }
@@ -29,7 +25,7 @@ public class Rotator : MonoBehaviour
             return;
 
         isRotating = true;
-        transform.LeanRotateY(45+transform.rotation.eulerAngles.y, 1);
+        transform.LeanRotateY(45+transform.rotation.eulerAngles.y, 1).setEaseInOutCubic();
         StartCoroutine(AfterRotation());
     }
 
