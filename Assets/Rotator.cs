@@ -27,6 +27,7 @@ public class Rotator : MonoBehaviour
         isRotating = true;
         transform.LeanRotateY(45+transform.rotation.eulerAngles.y, 1).setEaseInOutCubic();
         StartCoroutine(AfterRotation());
+        
     }
 
     IEnumerator AfterRotation()
